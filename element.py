@@ -1,7 +1,12 @@
 class Element:
     def __init__(self, elem_type, **kwargs):
-        self.elem_type = elem_type
-        self.dict = {}
+        # **kwargs = keyworded arguments (* for indeterminate
+        # number of arguments) accepted in dict format
+        # *args receives arg in tuple format (indexed)
+        # **kwargs receives arg in dict format (keyworded)
+        self.elem_type = elem_type  # indicates node type
+        # e.g. funct, statement, expr, var
+        self.dict = {}  # holds info about node
         for key, value in kwargs.items():
             self.dict[key] = value
 
