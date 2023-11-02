@@ -1,20 +1,13 @@
-from interpreterv1 import *
+from interpreterv2 import *
 from brewparse import parse_program
+import testcases
 
 
 def main():
-    testprog_1 = """func main() { 
-                    v = 10; 
-                    w = v;
-                    print("hello"); 
-                    print(v);
-                    print("hello");
-                }"""
-    ast1 = Interpreter()
-    # ast1.run(testprog_1)
-    parsed_test_1 = parse_program(testprog_1)
+    test = testcases.testing_inputi_at_end_of_print
+    ast1 = Interpreter()  # already includes parse_program
+    ast1.run(test)
     # ast1.output(parsed_test_1)
-    print(parsed_test_1)
 
 
 if __name__ == '__main__':
