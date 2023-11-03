@@ -4,7 +4,7 @@ import testcases
 
 
 def main():
-    test = testcases.testing_inputi_at_end_of_print
+    test = testcases.test_nested_ret
     ast1 = Interpreter()  # already includes parse_program
     ast1.run(test)
     # ast1.output(parsed_test_1)

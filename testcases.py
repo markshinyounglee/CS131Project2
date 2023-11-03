@@ -1,6 +1,87 @@
 """
 Valid programs
 """
+# for project 2
+
+# works!
+test_nested_expr = """func main() {
+ print((((3+4)*(6/3)))-10);
+}"""
+
+# works!
+test_overload = """func main() {
+  a = 5;
+  foo();
+  foo(10);
+  foo(20,30);
+}
+
+func foo() {
+  print(a);
+}
+
+func foo(a) {
+  print(a);
+}
+
+func foo(a,b) {
+  print(a," ",b);
+}"""
+
+test_and_or = """func main() {
+  print(true || false && false);
+  print(true && true || true && false);
+  print(true && true && true && false || false && true && true && true);
+}"""
+
+# works!
+test_concat_str = """func main() {
+  a = "abc" + "def";
+  b = "abc";
+  c = "def";
+  d = b + c;
+  print(a);
+  print(d);
+}"""
+
+# works!
+test_dynamic_scoping_2 = """func main() {
+  foo(5);
+}
+
+func foo(a) {
+  print(a);
+}"""
+
+test_nested_ret = """func foo() {
+  i = 0;
+  while (i < 3) {
+	j = 0;
+    while (j < 3) {
+		k = 0;
+		while (k < 3) {
+			if (i * j * k == 1) {
+				return ans;
+			} else {
+				ans = ans + 1;
+				k = k + 1;
+			}
+		}
+		j = j + 1;
+	}
+	i = i + 1;
+  }
+}
+
+func main() {
+  ans = 0;
+  print(foo());
+  print(ans);
+}"""
+
+
+##############################################
+# for project 1
 # works!
 testing_assignment_1 = """func main() {
                             w = 10;

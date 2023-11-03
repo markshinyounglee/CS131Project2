@@ -1,24 +1,23 @@
 # TO BE TURNED IN #
 from intbase import *  # import class from module
 from brewparse import parse_program
-from stack_v2 import Stack
+from stackv2 import EnvStack
 import copy  # return statement should return deep copy
 
 
-# In Python, it is helpful to add a boxtype (wrapper class)
+# In Python, it is helpful to add a box type (wrapper class)
 # to restrict the operations a type is allowed to perform
 # And I know exactly what operators can be used
 # Store values in a wrapper class and check the types manually
 # if you store types consistently and use lambdas, there is a simple
 # way to implement all the operations
 
-## TO DO ##
 # implement logic to pass the arguments in run_func
 # which implements func node or function definition node.
 # Then, you can implement evaluate_func_call_expression
 # and run_func_call.
 # Then, you should implement the dynamic scoping logic.
-# Then, test your code and hopefully you are done.
+# Then, test your code, and hopefully you are done.
 
 
 class Interpreter(InterpreterBase):  # TO DO
@@ -32,9 +31,10 @@ class Interpreter(InterpreterBase):  # TO DO
         # insert more code as needed
         # any method can add member variables
         # TO DO: replace variable_name_to_values to var_value_stack
-        self.variable_name_to_value = {}
+        # This is used for project 1; not for project 2
+        # self.variable_name_to_value = {}
         # map to hold all values to variables
-        self.var_value_stack = Stack()
+        self.var_value_stack = EnvStack()
         # stack of dictionaries that map variable to value (for dynamic scoping)
         # var_value_stack = [block1: [x:10, y:1], block2: [y:1, z:true]] <- top
         self.func_arg_dict = {}
@@ -43,6 +43,8 @@ class Interpreter(InterpreterBase):  # TO DO
         # (num-of-parameters):(index-of-function-definition-in-astree.dict['functions']).
         # func_arg_dict = {func1:{2:0, 1:1, 0:3}, func2:{3:2}, func3:{4:4}, ...}
         self.func_node_list = None  # access astree.dict['functions']
+        # alias to astree.dict['functions']
+        # READ ONLY
 
     def run(self, program):  # TO DO
         # program is an array of program strings
@@ -67,7 +69,7 @@ class Interpreter(InterpreterBase):  # TO DO
             function_name = function.dict['name']
             argument_count = len(function.dict['args'])
             # check if the function has no overloaded functions
-            if function_name not in self.func_arg_dict.values():
+            if function_name not in self.func_arg_dict:
                 # number of arguments:index in astree.dict['functions']
                 self.func_arg_dict[function_name] = {argument_count: index}
             # check if no function signature overlaps
@@ -87,11 +89,11 @@ class Interpreter(InterpreterBase):  # TO DO
             super().error(ErrorType.NAME_ERROR, """The program
                         does not start with the main() function""")
         else:
+            # always create scope before running function declaration
+            # main takes no parameters, so we don't need to push any formal parameters
+            self.var_value_stack.push_scope(InterpreterBase.FCALL_DEF)
             self.run_func(main_node)  # run the function from func node "main" (type Element)
-
-        # debugging code #
-        # print(self.variable_name_to_value)
-        # delete after use #
+            self.var_value_stack.pop()
 
     ## FIX THIS! with dynamic scoping
     # strategy: have a stack of dictionaries that list all the elements in that scope
@@ -109,7 +111,7 @@ class Interpreter(InterpreterBase):  # TO DO
         # run all statements
         self.run_statement_block(func_node.dict['statements'])
 
-        # scoping all handled in fcall statement
+        # pushing and popping the scope handled by run_func_call
 
     def run_statement_block(self, statement_list):
         for statement in statement_list:
@@ -135,26 +137,16 @@ class Interpreter(InterpreterBase):  # TO DO
         target_var_name = statement_node.dict['name']
         expression_name = statement_node.dict['expression']  # maps to expression node
         expression_value = self.evaluate_expression(expression_name)
-        # populate the variable map with the current value
-        var_index = self.var_value_stack.find_var_scope(target_var_name)
-        if not var_index:  # if such variable doesn't exist, create a new one
-            self.var_value_stack.update(self.var_value_stack.top, target_var_name, expression_value)
-        else:  # push a new var_val pair in stack
-            self.var_value_stack.update(var_index, target_var_name, expression_value)
+        # either add the var-val pair to the nearest scope or update the nearest enclosing scope var
+        self.var_value_stack.update({target_var_name: expression_value})
 
     def run_func_call(self, statement_node):  # run fcall statement node
         # for project 2, print() and custom functions are both valid function call statements
         # and run_func_call always returns a value, nil or actual
         function_name = statement_node.dict['name']
-        if function_name == 'print':
-            output_string = ''
-            for arg in statement_node.dict['args']:
-                # args can be any expression nodes
-                # including fcall nodes, arithmetic expression nodes, variable nodes, and value nodes
-                output_string += str(self.evaluate_expression(arg))
-            super().output(output_string)  # use output() for print
-        ## TO DO
-        elif function_name in self.func_arg_dict.keys():
+        if function_name in ('print', 'inputi', 'inputs'):  # standard functions we defined
+            self.evaluate_func_call_expression(statement_node)  # have all the same components
+        elif function_name in self.func_arg_dict:
             # if the function name is defined, check if parameter count is correct
             # func_arg_dict maps to a list of possible number of parameters
             arg_len = len(statement_node.dict['args'])
@@ -163,8 +155,10 @@ class Interpreter(InterpreterBase):  # TO DO
                 func_index = self.func_arg_dict[function_name][arg_len]
                 formal_arg_list = self.func_node_list[func_index].dict['args']
                 # pushed all necessary variables in the stack
-                self.var_value_stack.push({arg_name.dict['name']: self.evaluate_expression(arg_val)
-                                           for arg_name, arg_val in zip(formal_arg_list, statement_node.dict['args'])})
+                self.var_value_stack.push_scope(InterpreterBase.FCALL_DEF)
+                self.var_value_stack.push_params({arg_name.dict['name']: self.evaluate_expression(arg_val)
+                                                  for arg_name, arg_val in
+                                                  zip(formal_arg_list, statement_node.dict['args'])})
                 # call the function definition node
                 self.run_func(self.func_node_list[func_index])
                 # exit current scope
@@ -172,7 +166,7 @@ class Interpreter(InterpreterBase):  # TO DO
             else:
                 # if no, then throw NAME_ERROR
                 super().error(ErrorType.NAME_ERROR,
-                        f"No function {statement_node.dict['name']} with {len(statement_node.dict['args'])} arguments")
+                              f"No function {statement_node.dict['name']} with {len(statement_node.dict['args'])} arguments")
         else:
             super().error(ErrorType.NAME_ERROR,
                           f"{statement_node.dict['name']} is not a valid function statement")
@@ -193,8 +187,12 @@ class Interpreter(InterpreterBase):  # TO DO
 
         # dict['condition'] contains expression to be evaluated
         # create new scope
-        self.var_value_stack.push({})
-        if self.evaluate_expression(statement_node.dict['condition']):
+        self.var_value_stack.push_scope(InterpreterBase.IF_DEF)
+        condition = self.evaluate_expression(statement_node.dict['condition'])
+        if not isinstance(condition, bool):
+            super().error(ErrorType.TYPE_ERROR,
+                          """The if condition does not evaluate to boolean value""")
+        elif condition:
             self.run_statement_block(statement_node.dict['statements'])
         else:  # no else-if branching
             if statement_node.dict['else_statements'] is not None:  # check if else block is nonempty
@@ -209,17 +207,37 @@ class Interpreter(InterpreterBase):  # TO DO
         ## delete after use
 
         # create a new scope
-        self.var_value_stack.push({})
-        while self.evaluate_expression(statement_node.dict['condition']):
-            self.run_statement_block(statement_node.dict['statements'])
+        self.var_value_stack.push_scope(InterpreterBase.WHILE_DEF)
+        condition = self.evaluate_expression(statement_node.dict['condition'])
+        if not isinstance(condition, bool):
+            super().error(ErrorType.TYPE_ERROR,
+                          """The while condition does not evaluate to boolean value""")
+        else:
+            while self.evaluate_expression(statement_node.dict['condition']):
+                # evaluate the condition every cycle
+                self.run_statement_block(statement_node.dict['statements'])
         # exit current scope
         self.var_value_stack.pop()
 
     def run_return_call(self, statement_node):
+        # idea: exit the closest enclosing scope of function
+        # if the scope is for if, while statement, that doesn't count
+        # idea: recursively pop until we encounter the function scope
+
         ## debugging code
         if statement_node.elem_type != 'return':
             super().error(ErrorType.FAULT_ERROR, "not a return statement")
         ## delete after use
+
+        ## TO DO ##
+        # not only do you pop until encountering the first function block,
+        # you must also ensure that the function that contains the return statement node
+        # properly returns the value that the return statement node returns.
+        #
+        # keep popping until we encounter the first InterpreterBase.FCALL_DEF scope
+        while self.var_value_stack.curr_scope() != InterpreterBase.FCALL_DEF:
+            self.var_value_stack.pop()
+
         if statement_node.dict['expression'] is None:  # return nil if None
             return None  # return nil if None
         else:
@@ -229,13 +247,13 @@ class Interpreter(InterpreterBase):  # TO DO
         # must return the result of evaluation
         # should fork: value, variable, fcall, arithmetic expression
         elemtype = expression_node.elem_type
-        if elemtype == 'nil':
+        if elemtype == InterpreterBase.NIL_DEF: # 'nil'
             return None  # nil in BrewinLang is None in Python
         elif elemtype in ('int', 'string', 'bool'):
             return expression_node.dict['val']
-        elif elemtype == 'var':
+        elif elemtype == 'var': # 'var'
             return self.get_var_value(expression_node)
-        elif elemtype == 'neg' or elemtype == '!':
+        elif elemtype == 'neg' or elemtype == '!': # 'neg' or '!'
             return self.evaluate_unary_expression(expression_node)
         # list all possible binary expressions down below
         # equality expression can be used for any data-type operands
@@ -258,8 +276,9 @@ class Interpreter(InterpreterBase):  # TO DO
 
     def get_var_value(self, var_node):
         var_name = var_node.dict['name']
-        if var_name in self.variable_name_to_value.keys():
-            return self.variable_name_to_value[var_name]
+        var_value = self.var_value_stack.find_value_of_var(var_name)
+        if var_value is not None:
+            return var_value
         else:
             super().error(ErrorType.NAME_ERROR,
                           f'The variable {var_name} does not exist')
@@ -269,7 +288,8 @@ class Interpreter(InterpreterBase):  # TO DO
         # evaluate the expression node under op1
         expression = self.evaluate_expression(unary_expression.dict['op1'])
         if unary_expression.elem_type == 'neg':
-            if isinstance(expression, int):
+            if isinstance(expression, int) and not isinstance(expression, bool):
+                # needed because bool is a subclass of int
                 return -expression
             else:
                 super().error(ErrorType.TYPE_ERROR, """
@@ -310,9 +330,13 @@ class Interpreter(InterpreterBase):  # TO DO
         lhs_expression = self.evaluate_expression(plus_sign_expression_node.dict['op1'])
         rhs_expression = self.evaluate_expression(plus_sign_expression_node.dict['op2'])
         if isinstance(lhs_expression, int) and isinstance(rhs_expression, int):
-            self.evaluate_arithmetic_expression(plus_sign_expression_node)
+            if not isinstance(lhs_expression, bool) and not isinstance(rhs_expression, bool):
+                # need this check because bool is a subclass of int
+                return self.evaluate_arithmetic_expression(plus_sign_expression_node)
+                # return value if the result is an integer
         elif isinstance(lhs_expression, str) and isinstance(rhs_expression, str):
-            self.evaluate_concatenation_expression(plus_sign_expression_node)
+            # return concatenated string
+            return self.evaluate_concatenation_expression(plus_sign_expression_node)
 
     def evaluate_concatenation_expression(self, concatenation_expression_node):
         """debugging code"""
@@ -341,6 +365,9 @@ class Interpreter(InterpreterBase):  # TO DO
         if not isinstance(lhs_expression, int) or not isinstance(rhs_expression, int):
             super().error(ErrorType.TYPE_ERROR,
                           'Incompatible types for arithmetic operation')
+        elif isinstance(lhs_expression, bool) or isinstance(rhs_expression, bool):
+            super().error(ErrorType.TYPE_ERROR,
+                          'Cannot compute arithmetic operation to boolean values')
         else:
             if arithmetic_expression_node.elem_type == '+':
                 return lhs_expression + rhs_expression
@@ -416,6 +443,14 @@ class Interpreter(InterpreterBase):  # TO DO
                     super().output(str(self.evaluate_expression(arg)))
                 # receive user input and return a string
                 return super().get_input()
+        elif func_name == 'print':
+            output_string = ''
+            for arg in func_call_expression.dict['args']:
+                # args can be any expression nodes
+                # including fcall nodes, arithmetic expression nodes, variable nodes, and value nodes
+                output_string += str(self.evaluate_expression(arg))
+            super().output(output_string)  # use output() for print
+            return InterpreterBase.NIL_DEF  # print should return nil
         else:
             # see if the func_name is in the list of custom functions
             # see if the parameter number matches the length of arg of the matching functions
