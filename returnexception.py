@@ -3,7 +3,7 @@ from boxtypev2 import *
 
 class ReturnException(Exception):
     def __init__(self, val):
-        self.value = create_value(val)
+        self.value = val  # replace with create_value(val)
 
     def __str__(self):
         return str(self.value)

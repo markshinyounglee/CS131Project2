@@ -110,28 +110,23 @@ class Interpreter(InterpreterBase):  # TO DO
         # this could be done when run_func_call is invoked
 
         # run all statements
-        return self.run_statement_block(func_node.dict['statements'])
-
-        # pushing and popping the scope handled by run_func_call
-
-    def run_statement_block(self, statement_list):
         try:
-            for statement in statement_list:
-                self.run_statement(statement)
-
-            ## debugging code
-            super().error(ErrorType.FAULT_ERROR, """
-                        Never return nil""")
-            return InterpreterBase.NIL_DEF  # if no return statement is called, return nothing
+            self.run_statement_block(func_node.dict['statements'])
+            return InterpreterBase.NIL_DEF # return nil if no statement is return statement
         except ReturnException as e:
             # clean up all the previous scopes
             #
             # keep popping until we encounter the first InterpreterBase.FCALL_DEF scope
+            # which will be popped by the caller of the function 
             while self.var_value_stack.curr_scope() != InterpreterBase.FCALL_DEF:
                 self.var_value_stack.pop()
+            return e.get_val() 
 
-            print("returning", e)
-            return e.get_val()
+        # pushing and popping the scope handled by run_func_call
+
+    def run_statement_block(self, statement_list):
+        for statement in statement_list:
+            self.run_statement(statement)
 
     def run_statement(self, statement_node):  # fork to assignment or fcall
         if statement_node.elem_type == '=':
@@ -481,3 +476,7 @@ class Interpreter(InterpreterBase):  # TO DO
 #
 # another way is raising exception and catching it at the nearest function block
 # raising a flag for returns
+# Exception handling is the way I used to implement the return logic
+# and I used a separate stack to keep track of what type of stack we are in currently,
+# although this is superfluous because we only need to pop the scopes until the current scope 
+# when we encounter return statement
