@@ -79,6 +79,18 @@ func main() {
   print(ans);
 }"""
 
+test_recur3 = """func main() {
+ print(fib(5));
+}
+
+func fib(n) {
+ if (n < 3) {
+  return 1;
+ } else {
+  return fib(n-2) + fib(n-1);
+ }
+}"""
+
 
 ##############################################
 # for project 1

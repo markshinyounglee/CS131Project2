@@ -26,6 +26,9 @@ class Value:
         self.t = other.t
         self.v = other.v
 
+    def __str__(self):
+        return str(self.v)
+
 
 def create_value(val):
     if val == InterpreterBase.TRUE_DEF:

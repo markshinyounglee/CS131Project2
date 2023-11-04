@@ -2,6 +2,7 @@
 from intbase import *  # import class from module
 from brewparse import parse_program
 from stackv2 import EnvStack
+from returnexception import ReturnException
 import copy  # return statement should return deep copy
 
 
@@ -109,13 +110,28 @@ class Interpreter(InterpreterBase):  # TO DO
         # this could be done when run_func_call is invoked
 
         # run all statements
-        self.run_statement_block(func_node.dict['statements'])
+        return self.run_statement_block(func_node.dict['statements'])
 
         # pushing and popping the scope handled by run_func_call
 
     def run_statement_block(self, statement_list):
-        for statement in statement_list:
-            self.run_statement(statement)
+        try:
+            for statement in statement_list:
+                self.run_statement(statement)
+
+            ## debugging code
+            super().error(ErrorType.FAULT_ERROR, """
+                        Never return nil""")
+            return InterpreterBase.NIL_DEF  # if no return statement is called, return nothing
+        except ReturnException as e:
+            # clean up all the previous scopes
+            #
+            # keep popping until we encounter the first InterpreterBase.FCALL_DEF scope
+            while self.var_value_stack.curr_scope() != InterpreterBase.FCALL_DEF:
+                self.var_value_stack.pop()
+
+            print("returning", e)
+            return e.get_val()
 
     def run_statement(self, statement_node):  # fork to assignment or fcall
         if statement_node.elem_type == '=':
@@ -160,9 +176,10 @@ class Interpreter(InterpreterBase):  # TO DO
                                                   for arg_name, arg_val in
                                                   zip(formal_arg_list, statement_node.dict['args'])})
                 # call the function definition node
-                self.run_func(self.func_node_list[func_index])
+                val = self.run_func(self.func_node_list[func_index])
                 # exit current scope
                 self.var_value_stack.pop()
+                return val
             else:
                 # if no, then throw NAME_ERROR
                 super().error(ErrorType.NAME_ERROR,
@@ -196,7 +213,7 @@ class Interpreter(InterpreterBase):  # TO DO
             self.run_statement_block(statement_node.dict['statements'])
         else:  # no else-if branching
             if statement_node.dict['else_statements'] is not None:  # check if else block is nonempty
-                self.run_statement_block(statement_node.dict['statements'])
+                self.run_statement_block(statement_node.dict['else_statements'])
         # exit current scope
         self.var_value_stack.pop()
 
@@ -233,15 +250,11 @@ class Interpreter(InterpreterBase):  # TO DO
         # not only do you pop until encountering the first function block,
         # you must also ensure that the function that contains the return statement node
         # properly returns the value that the return statement node returns.
-        #
-        # keep popping until we encounter the first InterpreterBase.FCALL_DEF scope
-        while self.var_value_stack.curr_scope() != InterpreterBase.FCALL_DEF:
-            self.var_value_stack.pop()
 
-        if statement_node.dict['expression'] is None:  # return nil if None
-            return None  # return nil if None
+        if statement_node.dict['expression'] == InterpreterBase.NIL_DEF:  # return nil if None
+            raise ReturnException(InterpreterBase.NIL_DEF)  # return nil if None
         else:
-            return copy.deepcopy(self.evaluate_expression(statement_node.dict['expression']))
+            raise ReturnException(copy.deepcopy(self.evaluate_expression(statement_node.dict['expression'])))
 
     def evaluate_expression(self, expression_node):
         # must return the result of evaluation
@@ -457,4 +470,14 @@ class Interpreter(InterpreterBase):  # TO DO
             # to accomplish that, we should use func_arg_dict in the class (name of func and param count)
             # if yes, fetch the function definition and pass the arguments
             # if no, throw ErrorType.NAME_ERROR
-            self.run_func_call(func_call_expression)
+            return self.run_func_call(func_call_expression)
+
+
+# Ideas for return function implementation
+# Whenever we run a statement,
+# return a tuple (bool, value) where bool == true if the
+# statement is a return statement (pop all stacks until we encounter the first function block)
+# or bool == false if the statement is NOT a return statement
+#
+# another way is raising exception and catching it at the nearest function block
+# raising a flag for returns
