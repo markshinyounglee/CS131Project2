@@ -286,9 +286,14 @@ class Interpreter(InterpreterBase):  # TO DO
                         not a valid expression""")
 
     def get_var_value(self, var_node):
-        var_name = var_node.dict['name']
-        var_value = self.var_value_stack.find_value_of_var(var_name)
-        return var_value
+        try:
+            var_name = var_node.dict['name']
+            var_value = self.var_value_stack.find_value_of_var(var_name)
+            return var_value
+        except ValueError:
+            super().error(
+                ErrorType.NAME_ERROR, f"No such variable in the current scope"
+            )
 
     def evaluate_unary_expression(self, unary_expression):
         # we should ensure that the unary_expression always gets a node
@@ -344,6 +349,9 @@ class Interpreter(InterpreterBase):  # TO DO
         elif isinstance(lhs_expression, str) and isinstance(rhs_expression, str):
             # return concatenated string
             return self.evaluate_concatenation_expression(plus_sign_expression_node)
+        else:
+            super().error(ErrorType.TYPE_ERROR, 
+                          "Error: Invalid operands for + operation")
 
     def evaluate_concatenation_expression(self, concatenation_expression_node):
         """debugging code"""

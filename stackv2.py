@@ -59,9 +59,7 @@ class EnvStack:
     def find_value_of_var(self, var):
         var_scope = self.__find_var_scope(var)
         if var_scope is None:
-            self.error_reporter.error(
-                ErrorType.NAME_ERROR, f"No variable named {var} in the current scope"
-            )
+            raise ValueError  # the caller function handles ValueError
         return self.stack[var_scope][var].value()  # unwrap
 
     def push_scope(self, scope_type):  # enter a new function scope

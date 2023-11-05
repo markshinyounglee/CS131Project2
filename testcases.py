@@ -236,6 +236,25 @@ invalid_dynamic_scoping_3 = """func main() {
 }"""
 
 
+invalid_dynamic_scoping_2 = """func main() {
+    a = 5;
+    if (a > 3) {
+        b = 3;
+    }
+    print(a + b);
+}"""
+
+int_compare_vars = """func main() {
+  a = 5;
+  b = 10;
+  print(a < b);
+  print(a > b);
+  print(a <= a);
+  print(a >= a);
+  print(a == a);
+  print(a != a);
+}"""
+
 ##############################################
 # for project 1
 # works!

@@ -31,18 +31,20 @@ class Value:
 
 
 def create_value(val):
-    if val == True and not isinstance(val, int):  # shouldn't be integer
+    if isinstance(val, int) and not isinstance(val, bool):  # int is a supertype of bool
+        # "The Boolean type is a subtype of the integer type, and Boolean values behave like the values 0 and 1"
+        # https://docs.python.org/3.10/reference/datamodel.html#the-standard-type-hierarchy
+        return Value(Type.INT, val)
+    elif val is True:  # shouldn't be integer
         # we need this because in Python, 1 == True
         return Value(Type.BOOL, True)
-    elif val == False and not isinstance(val, int):  # shouldn't be integer
+    elif val is False:  # shouldn't be integer
         # we need this because in Python, any value not 1 is False 
         return Value(Type.BOOL, False)
-    elif val == None:
+    elif val is None:
         return Value(Type.NIL, None)
     elif isinstance(val, str):
         return Value(Type.STRING, val)
-    elif isinstance(val, int):
-        return Value(Type.INT, val)
     else:
         raise ValueError("Unknown value type")
 

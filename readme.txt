@@ -67,3 +67,16 @@ Also, now that we allow nil to be one of the built-in types, we should always
 return whatever value the stack returns. Otherwise, that would be an error. If the program
 attempts to access a variable before/after its lifetime, it raises ErrorType.NAME_ERROR
 as per the program specifications.
+
+==============
+
+In Python, there are only two instances of the boolean object--True and False
+--in a similar manner to NoneType which only has one object instance None.
+
+https://stackoverflow.com/questions/24842852/is-there-only-one-true-and-one-false-object-in-python
+
+According to the official Python documentation:
+https://docs.python.org/3.10/reference/datamodel.html#the-standard-type-hierarchy
+"The Boolean type is a subtype of the integer type, and Boolean values behave like the values 0 and 1, 
+respectively, in almost all contexts, the exception being that when converted to a string, 
+the strings "False" or "True" are returned, respectively."
