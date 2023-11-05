@@ -170,6 +170,56 @@ false
 """
 
 
+# works!
+test_recur1 = """func main() {
+  print(fact(5));
+}
+
+func fact(n) {
+  if (n <= 1) { return 1; }
+  return n * fact(n-1);
+}"""
+
+test_nested_ret = """func foo() {
+  i = 0;
+  while (i < 3) {
+	j = 0;
+    while (j < 3) {
+		k = 0;
+		while (k < 3) {
+			if (i * j * k == 1) {
+				return ans;
+			} else {
+				ans = ans + 1;
+				k = k + 1;
+			}
+		}
+		j = j + 1;
+	}
+	i = i + 1;
+  }
+}
+
+func main() {
+  ans = 0;
+  print(foo());
+  print(ans);
+}"""
+
+# should implement boxtype to do this
+test_nil = """func foo() { 
+ print("hello");
+}
+
+func bar() {
+  return;
+}
+
+func main() {
+  val = nil;
+  if (foo() == val && bar() == nil) { print("this should print!"); }
+}"""
+
 ##############################################
 # for project 1
 # works!

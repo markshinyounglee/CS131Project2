@@ -1,5 +1,8 @@
 from boxtypev2 import *
 
+# handles return statement control flow
+# by only allowing function definition node
+# to handle this exception
 
 class ReturnException(Exception):
     def __init__(self, val):

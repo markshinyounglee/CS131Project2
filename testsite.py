@@ -4,7 +4,7 @@ import testcases
 
 
 def main():
-    test = testcases.test_recur3
+    test = testcases.test_nil
     ast1 = Interpreter()  # already includes parse_program
     ast1.run(test)
     # ast1.output(parsed_test_1)

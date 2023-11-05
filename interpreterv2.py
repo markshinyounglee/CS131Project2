@@ -480,3 +480,11 @@ class Interpreter(InterpreterBase):  # TO DO
 # and I used a separate stack to keep track of what type of stack we are in currently,
 # although this is superfluous because we only need to pop the scopes until the current scope 
 # when we encounter return statement
+#
+# TO DO: 
+# To implement Brewin None ('nil') and Brewin boolean ('true' and 'false'),
+# you have two options
+# 1. use the wrapper class and store all values generated in wrapper class only
+# in other words, whenever you make a value, make it into an object
+# 2. use Element as the wrapper class instead of boxtypev2. Then, have a formatter
+# to print the literal values accordingly
