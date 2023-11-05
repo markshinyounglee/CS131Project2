@@ -4,7 +4,7 @@ import testcases
 
 
 def main():
-    test = testcases.test_nil  # test_nil
+    test = testcases.invalid_dynamic_scoping_3  
     ast1 = Interpreter()  # already includes parse_program
     ast1.run(test)
     # ast1.output(parsed_test_1)

@@ -206,7 +206,7 @@ func main() {
   print(ans);
 }"""
 
-# should implement boxtype to do this
+# works
 test_nil = """func foo() { 
  print("hello");
 }
@@ -220,9 +220,21 @@ func main() {
   if (foo() == val && bar() == nil) { print("this should print!"); }
 }"""
 
+# works
 test_just_nil = """func main() {
   v = nil;
 }"""
+
+# works
+invalid_dynamic_scoping_3 = """func main() {
+    a = 0;
+    while (a < 5) {
+        a = a + 1;
+        b = a * a;
+    }
+    print(b);
+}"""
+
 
 ##############################################
 # for project 1

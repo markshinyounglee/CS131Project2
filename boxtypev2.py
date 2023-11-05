@@ -31,9 +31,11 @@ class Value:
 
 
 def create_value(val):
-    if val == True:
+    if val == True and not isinstance(val, int):  # shouldn't be integer
+        # we need this because in Python, 1 == True
         return Value(Type.BOOL, True)
-    elif val == False:
+    elif val == False and not isinstance(val, int):  # shouldn't be integer
+        # we need this because in Python, any value not 1 is False 
         return Value(Type.BOOL, False)
     elif val == None:
         return Value(Type.NIL, None)
