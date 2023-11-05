@@ -235,7 +235,7 @@ invalid_dynamic_scoping_3 = """func main() {
     print(b);
 }"""
 
-
+# works!
 invalid_dynamic_scoping_2 = """func main() {
     a = 5;
     if (a > 3) {
@@ -244,6 +244,7 @@ invalid_dynamic_scoping_2 = """func main() {
     print(a + b);
 }"""
 
+# works!
 int_compare_vars = """func main() {
   a = 5;
   b = 10;
@@ -253,6 +254,10 @@ int_compare_vars = """func main() {
   print(a >= a);
   print(a == a);
   print(a != a);
+}"""
+
+invalid_arithmetic_2 = """func main() {
+ a = true + 5;
 }"""
 
 ##############################################

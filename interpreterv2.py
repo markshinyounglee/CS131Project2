@@ -343,9 +343,14 @@ class Interpreter(InterpreterBase):  # TO DO
         rhs_expression = self.evaluate_expression(plus_sign_expression_node.dict['op2'])
         if isinstance(lhs_expression, int) and isinstance(rhs_expression, int):
             if not isinstance(lhs_expression, bool) and not isinstance(rhs_expression, bool):
-                # need this check because bool is a subclass of int
+                # need this check because bool is a subtype of int
+                # under 3.2 -- Booleans
+                # https://docs.python.org/3.10/reference/datamodel.html#the-standard-type-hierarchy
                 return self.evaluate_arithmetic_expression(plus_sign_expression_node)
                 # return value if the result is an integer
+            else:
+                super().error(ErrorType.TYPE_ERROR, 
+                              "Error: Cannot perform + for boolean operands")
         elif isinstance(lhs_expression, str) and isinstance(rhs_expression, str):
             # return concatenated string
             return self.evaluate_concatenation_expression(plus_sign_expression_node)
