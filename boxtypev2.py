@@ -27,15 +27,15 @@ class Value:
         self.v = other.v
 
     def __str__(self):
-        return str(self.v)
+        return get_printable(self)
 
 
 def create_value(val):
-    if val == InterpreterBase.TRUE_DEF:
+    if val == True:
         return Value(Type.BOOL, True)
-    elif val == InterpreterBase.FALSE_DEF:
+    elif val == False:
         return Value(Type.BOOL, False)
-    elif val == InterpreterBase.NIL_DEF:
+    elif val == None:
         return Value(Type.NIL, None)
     elif isinstance(val, str):
         return Value(Type.STRING, val)
@@ -45,7 +45,7 @@ def create_value(val):
         raise ValueError("Unknown value type")
 
 
-def get_printable(val):
+def get_printable(val):  # get custom printable values
     if val.type() == Type.INT:
         return str(val.value())
     if val.type() == Type.STRING:

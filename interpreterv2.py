@@ -3,6 +3,7 @@ from intbase import *  # import class from module
 from brewparse import parse_program
 from stackv2 import EnvStack
 from returnexception import ReturnException
+from boxtypev2 import Value, create_value
 import copy  # return statement should return deep copy
 
 
@@ -112,7 +113,7 @@ class Interpreter(InterpreterBase):  # TO DO
         # run all statements
         try:
             self.run_statement_block(func_node.dict['statements'])
-            return InterpreterBase.NIL_DEF # return nil if no statement is return statement
+            return None # return nil if no statement is return statement
         except ReturnException as e:
             # clean up all the previous scopes
             #
@@ -141,8 +142,7 @@ class Interpreter(InterpreterBase):  # TO DO
             self.run_return_call(statement_node)
         else:
             super().error(ErrorType.NAME_ERROR, """
-            The statement is neither assignment 
-            nor function""")
+                    The statement is undefined""")
 
     def run_assignment(self, statement_node):  # run assignment statement node
         target_var_name = statement_node.dict['name']
@@ -181,7 +181,7 @@ class Interpreter(InterpreterBase):  # TO DO
                               f"No function {statement_node.dict['name']} with {len(statement_node.dict['args'])} arguments")
         else:
             super().error(ErrorType.NAME_ERROR,
-                          f"{statement_node.dict['name']} is not a valid function statement")
+                          f"{statement_node.dict['name']} is an undefined function")
         """
         recall that only function used as a statement is
         print, which uses super().output()
@@ -254,8 +254,11 @@ class Interpreter(InterpreterBase):  # TO DO
     def evaluate_expression(self, expression_node):
         # must return the result of evaluation
         # should fork: value, variable, fcall, arithmetic expression
+        if expression_node is None:  # account for return; case
+            return None
+
         elemtype = expression_node.elem_type
-        if elemtype == InterpreterBase.NIL_DEF: # 'nil'
+        if elemtype == InterpreterBase.NIL_DEF: # 'nil' as literal
             return None  # nil in BrewinLang is None in Python
         elif elemtype in ('int', 'string', 'bool'):
             return expression_node.dict['val']
@@ -285,11 +288,7 @@ class Interpreter(InterpreterBase):  # TO DO
     def get_var_value(self, var_node):
         var_name = var_node.dict['name']
         var_value = self.var_value_stack.find_value_of_var(var_name)
-        if var_value is not None:
-            return var_value
-        else:
-            super().error(ErrorType.NAME_ERROR,
-                          f'The variable {var_name} does not exist')
+        return var_value
 
     def evaluate_unary_expression(self, unary_expression):
         # we should ensure that the unary_expression always gets a node
@@ -456,9 +455,9 @@ class Interpreter(InterpreterBase):  # TO DO
             for arg in func_call_expression.dict['args']:
                 # args can be any expression nodes
                 # including fcall nodes, arithmetic expression nodes, variable nodes, and value nodes
-                output_string += str(self.evaluate_expression(arg))
+                output_string += str(create_value(self.evaluate_expression(arg)))
             super().output(output_string)  # use output() for print
-            return InterpreterBase.NIL_DEF  # print should return nil
+            return None  # print should return nil
         else:
             # see if the func_name is in the list of custom functions
             # see if the parameter number matches the length of arg of the matching functions

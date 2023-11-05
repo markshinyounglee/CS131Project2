@@ -1,4 +1,5 @@
 from intbase import *
+from boxtypev2 import Value, create_value, get_printable
 
 
 class EnvStack:
@@ -25,7 +26,7 @@ class EnvStack:
             self.error_reporter.error(ErrorType.FAULT_ERROR,
                                       "ERROR: cannot push element to empty scope")
             ## delete after use
-        self.stack[self.top - 1][var] = val
+        self.stack[self.top - 1][var] = create_value(val)  # wrap val to wrapper class
 
     def push_params(self, var_val_dict):
         # when we declare a new function, formal parameters automatically
@@ -39,7 +40,7 @@ class EnvStack:
             self.error_reporter.error(ErrorType.FAULT_ERROR,
                                       """Cannot push parameters when the current scope is nonempty""")
         for var, val in var_val_dict.items():
-            self.stack[self.top - 1][var] = val
+            self.stack[self.top - 1][var] = create_value(val)  # add value to stack directly so wrap it here
 
     # user will only "update" the variable and update() will take care of
     # it all
@@ -51,24 +52,26 @@ class EnvStack:
             for var, val in var_val_dict.items():
                 var_scope = self.__find_var_scope(var)
                 if var_scope is None:  # nonempty but not in any scope
-                    self.__push_element(var, val)
+                    self.__push_element(var, val)  # call __push_element() (val wrapped inside dunder method)
                 else:  # update element in the nearest scope
-                    self.stack[var_scope][var] = val
+                    self.stack[var_scope][var] = create_value(val)  # directly update the stack so wrap var
 
     def find_value_of_var(self, var):
         var_scope = self.__find_var_scope(var)
         if var_scope is None:
-            return None
-        return self.stack[var_scope][var]
+            self.error_reporter.error(
+                ErrorType.NAME_ERROR, f"No variable named {var} in the current scope"
+            )
+        return self.stack[var_scope][var].value()  # unwrap
 
     def push_scope(self, scope_type):  # enter a new function scope
         self.stack.append({})
         self.top += 1
         self.empty = False
         if scope_type == InterpreterBase.FCALL_DEF:
-            self.currScope.append(scope_type)
+            self.currScope.append(scope_type)  # mark the new scope as fcall
         elif scope_type in (InterpreterBase.IF_DEF, InterpreterBase.WHILE_DEF):
-            self.currScope.append(scope_type)
+            self.currScope.append(scope_type)  # mark the new scope as if/while call
         else:
             self.error_reporter.error(ErrorType.FAULT_ERROR,
                                       "Invalid way to add another scope to the function")
@@ -80,13 +83,13 @@ class EnvStack:
             top_val = self.stack.pop(self.top-1)
             top_scope = self.currScope.pop(self.top-1)
             self.top -= 1
-            return top_val, top_scope
+            return {var:wrap_val.value() for var,wrap_val in top_val.items()}, top_scope
         return None
 
-    def top_element(self):
+    def top_element(self):  # for inspection of the topmost scope purposes
         if self.empty:
             return None
-        return self.stack[self.top - 1]
+        return {var:get_printable(wrapped_val) for var, wrapped_val in self.stack[self.top - 1].items()}
 
     def curr_scope(self):
         if self.empty:

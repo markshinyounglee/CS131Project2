@@ -220,6 +220,10 @@ func main() {
   if (foo() == val && bar() == nil) { print("this should print!"); }
 }"""
 
+test_just_nil = """func main() {
+  v = nil;
+}"""
+
 ##############################################
 # for project 1
 # works!
