@@ -3,6 +3,12 @@ Valid programs
 """
 # for project 2
 
+test_legacy_1 = """func main() {
+    a = inputi("Enter a number:");
+    b = 10 - (6 + inputi());
+    print("Answer: ", (1 - a + b) - (a - b));
+}"""
+
 # works!
 test_nested_expr = """func main() {
  print((((3+4)*(6/3)))-10);
